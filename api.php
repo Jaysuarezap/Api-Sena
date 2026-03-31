@@ -7,7 +7,7 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 
-// 2. Inclusión de la conexión (Asegúrate de que conexion.php existe)
+// 2. Inclusión de la conexión (Nos aseguramos de que conexion.php existe)
 include_once 'conexion.php';
 
 // 3. Captura de datos JSON
@@ -20,7 +20,7 @@ if (isset($data->accion) && isset($data->usuario) && isset($data->password)) {
     $usuario = $data->usuario;
     $password = $data->password;
 
-    // --- PROCESO DE REGISTRO ---
+    // --- Proceso de Registro ---
     if ($data->accion == "registro") {
         $correo = $data->correo ?? '';
         $telefono = $data->telefono ?? '';
@@ -38,7 +38,7 @@ if (isset($data->accion) && isset($data->usuario) && isset($data->password)) {
             echo json_encode(["status" => "error", "error" => "Error al registrar: " . $conn->error]);
         }
     }
-    // --- PROCESO DE LOGIN ---
+    // --- Proceso de Login ---
     elseif ($data->accion == "login") {
         $query = "SELECT * FROM usuarios WHERE usuario = '$usuario'";
         $resultado = $conn->query($query);

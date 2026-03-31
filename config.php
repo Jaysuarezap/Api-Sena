@@ -2,7 +2,7 @@
 $host = "127.0.0.1"; 
 $db_name = "api_sena_db"; 
 $username = "root"; // Cambiado a root
-$password = "";     // Cambiado a vacío
+$password = "";     // Cambiado a contraseña vacía
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db_name;charset=utf8mb4", $username, $password);

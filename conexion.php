@@ -1,8 +1,8 @@
 <?php
 // Configuración de las credenciales de la base de datos
 $host = "localhost";
-$user = "root"; // Aca un usuario por defecto de XAMPP
-$pass = ""; //Aca Contraseña por defecto (vacía)
+$user = "root"; // Un usuario por defecto de XAMPP
+$pass = ""; //La contraseña por defecto
 $db   = "api_sena_db";
 
 // Creamos la conexión usando MySQLi

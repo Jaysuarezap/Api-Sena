@@ -1,79 +1,70 @@
 <?php
-// Configuración de visualización de errores (Opcional en producción)
+// 1. Configuración de errores y cabeceras
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Encabezados para permitir solicitudes CORS y definir formato JSON
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 header("Access-Control-Allow-Methods: POST");
 
-// Inclusión del archivo de conexión a la base de datos
+// 2. Inclusión de la conexión (Asegúrate de que conexion.php existe)
 include_once 'conexion.php';
 
-// Captura de los datos enviados en el cuerpo de la petición (JSON)
-$data = json_decode(file_get_contents("php://input"));
+// 3. Captura de datos JSON
+$input = file_get_contents("php://input");
+$data = json_decode($input);
 
-// Verificación de que se recibió una acción y los datos necesarios
+// 4. Verificación de datos mínimos
 if (isset($data->accion) && isset($data->usuario) && isset($data->password)) {
     
     $usuario = $data->usuario;
     $password = $data->password;
 
-    // ==========================================
-    // PROCESO DE REGISTRO
-    // ==========================================
+    // --- PROCESO DE REGISTRO ---
     if ($data->accion == "registro") {
+        $correo = $data->correo ?? '';
+        $telefono = $data->telefono ?? '';
+        $rol = $data->rol ?? 'cliente';
+        
         $password_hash = password_hash($password, PASSWORD_DEFAULT);
-        $query = "INSERT INTO usuarios (usuario, password) VALUES ('$usuario', '$password_hash')";
+        
+        // Ajustado a los nombres de columna que vimos en el error anterior
+        $query = "INSERT INTO usuarios (usuario, password, correo, telefono, rol) 
+                  VALUES ('$usuario', '$password_hash', '$correo', '$telefono', '$rol')";
 
         if ($conn->query($query) === TRUE) {
-            echo json_encode(["mensaje" => "Usuario registrado exitosamente."]);
+            echo json_encode(["status" => "success", "mensaje" => "Usuario registrado exitosamente."]);
         } else {
-            echo json_encode(["error" => "Error al registrar el usuario: " . $conn->error]);
+            echo json_encode(["status" => "error", "error" => "Error al registrar: " . $conn->error]);
         }
     }
-
-    // ==========================================
-    // PROCESO DE ACTUALIZACIÓN
-    // ==========================================
-    elseif ($data->accion == "actualizar") {
-        $nueva_password_hash = password_hash($password, PASSWORD_DEFAULT);
-        $query = "UPDATE usuarios SET password = '$nueva_password_hash' WHERE usuario = '$usuario'";
-
-        if ($conn->query($query) === TRUE) {
-            echo json_encode(["mensaje" => "Contraseña actualizada correctamente."]);
-        } else {
-            echo json_encode(["error" => "Error al actualizar: " . $conn->error]);
-        }
-    }
-
-    // ==========================================
-    // PROCESO DE INICIO DE SESIÓN (LOGIN)
-    // ==========================================
+    // --- PROCESO DE LOGIN ---
     elseif ($data->accion == "login") {
         $query = "SELECT * FROM usuarios WHERE usuario = '$usuario'";
         $resultado = $conn->query($query);
 
         if ($resultado->num_rows > 0) {
             $fila = $resultado->fetch_assoc();
-            
-            // Verificación de contraseña contra el hash de la BD
+            // Verificamos con la columna 'password'
             if (password_verify($password, $fila['password'])) {
-                echo json_encode(["mensaje" => "Autenticación satisfactoria."]);
+                echo json_encode([
+                    "status" => "success",
+                    "mensaje" => "Autenticación satisfactoria.",
+                    "usuario" => $fila['usuario']
+                ]);
             } else {
-                echo json_encode(["error" => "Error en la autenticación. Contraseña incorrecta."]);
+                echo json_encode(["status" => "error", "mensaje" => "Contraseña incorrecta."]);
             }
         } else {
-            echo json_encode(["error" => "Error en la autenticación. Usuario no existe."]);
+            echo json_encode(["status" => "error", "mensaje" => "El usuario no existe."]);
         }
     }
+
 } else {
-    // Respuesta por defecto si no se cumplen los requisitos de entrada
-    echo json_encode(["error" => "No se especificó una acción válida o faltan datos (usuario/password)."]);
+    echo json_encode(["status" => "error", "mensaje" => "Faltan datos obligatorios (accion, usuario o password)."]);
 }
 
-// Cierre seguro de la conexión a la base de datos
+// 5. Cierre de conexión
 if (isset($conn) && $conn) {
     $conn->close();
 }
